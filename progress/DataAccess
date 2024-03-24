@@ -1,0 +1,10 @@
+import pandas as pd
+import json
+
+class DataAccess:
+    def load_csv_data(self, path):
+        return pd.read_csv(path)
+
+    def load_geojson_data(self, path):
+        with open(path) as response:
+            return json.load(response)
