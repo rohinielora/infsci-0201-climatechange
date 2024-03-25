@@ -1,0 +1,151 @@
+pip install pandas
+!{sys.executable} -m pip install ipython nbformat>=4.2.0
+pip install plotly
+import pandas as pd
+from statistics import stdev
+import plotly.graph_objects as go
+import plotly.express as px
+import plotly.io as pio
+from urllib.request import urlopen
+import json
+df = pd.read_csv("../data/FAOSTAT_temperature.csv")
+df.head()
+with open("../data/countries.geojson") as response:
+    countries = json.load(response)
+# countries
+temp_df = df[df["Element"]=="Temperature change"]
+temp_df.shape
+len(temp_df.Area.unique())
+std_df = df[df["Element"]=="Standard Deviation"]
+std_df.shape
+c = list(std_df.Area.unique())
+c
+jc = []
+for feature in countries['features']:
+    jc.append(feature['properties']['ADMIN'])
+print(f"{len(jc)} {len(c)}")
+result_c = []
+
+for item in c:
+    if item not in jc:
+        result_c.append(item)
+        
+print(result_c)
+result_jc = []
+
+for item in jc:
+    if item not in c:
+        result_jc.append(item)
+        
+print(result_jc)
+# changer le premier avec le deuxieme
+
+countries_dict = {
+    'Bahamas' : 'The Bahamas',
+    'Bolivia (Plurinational State of)':'Bolivia',
+    'Brunei Darussalam':'Brunei',
+    'Cabo Verde':'Cape Verde',
+    'China, Hong Kong SAR':'Hong Kong S.A.R.',
+    'China, Macao SAR':'Macao S.A.R',
+    'China, Taiwan Province of':'Taiwan',
+    'Congo':'Republic of Congo',
+    "Côte d'Ivoire":'Ivory Coast',
+    'Czechia':'Czech Republic',
+    "Democratic People's Republic of Korea":'North Korea',
+    'Eswatini':'Swaziland',
+    'Republic of Korea':'South Korea',
+    'Falkland Islands (Malvinas)':'Falkland Islands',
+    'Guinea-Bissau':'Guinea Bissau',
+    'Iran (Islamic Republic of)':'Iran',
+    "Lao People's Democratic Republic":'Laos',
+    'North Macedonia':'Macedonia',
+    'Republic of Moldova':'Moldova',
+    'Serbia':'Republic of Serbia',
+    'Serbia and Montenegro':'Kosovo',
+    'South Georgia and the South Sandwich Islands':'South Georgia and South Sandwich Islands',
+    'Sudan (former)':'Somaliland',
+    'Syrian Arab Republic':'Syria',
+    'Timor-Leste':'East Timor',
+    'Türkiye':'Turkey',
+    'United Kingdom of Great Britain and Northern Ireland':'United Kingdom',
+    'USSR':'Russia',
+    'Venezuela (Bolivarian Republic of)':'Venezuela',
+    'Viet Nam':'Vietnam',
+    'Wallis and Futuna Islands':'Wallis and Futuna',    
+}
+c_std_df = std_df.copy()
+c_std_df.Area = c_std_df.Area.replace(countries_dict)
+c_std_df[c_std_df["Area"]=='Kazakhstan']
+c_tp_df = temp_df.copy()
+c_tp_df.Area = c_tp_df.Area.replace(countries_dict)
+c_tp_df[c_tp_df["Area"]=='Kazakhstan']
+st_tp_df = c_tp_df.copy()
+st_tp_df = st_tp_df.groupby('Area')['Value'].std().reset_index()
+st_tp_df
+m_std_df = c_std_df.groupby('Area')['Value'].mean().reset_index()
+m_std_df
+
+m_tp_df = c_tp_df.groupby('Area')['Value'].mean().reset_index()
+m_tp_df.shape
+
+
+
+
+
+
+
+
+
+
+!pip install nbformat>=4.2.0
+!pip install 'nbformat>=4.2.0'
+!pip install ipython
+import plotly.express as px
+fig = px.box(st_tp_df, y="Value")
+fig.show()
+import plotly.io as pio
+pio.renderers.default = 'iframe'  # or 'svg' or 'browser'
+import plotly.io as pio
+pio.renderers.default = 'notebook'  # or 'jupyterlab' if you are using JupyterLab
+
+fig = px.box(st_tp_df, y="Value")
+fig.show()
+
+
+
+print(st_tp_df[st_tp_df.Value == st_tp_df.Value.max()])
+st_tp_df = st_tp_df.drop(index=210, axis=0)
+st_tp_df.to_csv("../data/std_temp_means.csv")
+fig = px.box(m_std_df, y="Value")
+fig.show()
+
+print(m_std_df[m_std_df.Value == m_std_df.Value.max()])
+
+m_std_df = m_std_df.drop(index=210, axis=0)
+
+print(m_std_df[m_std_df.Value == m_std_df.Value.max()])
+
+
+
+
+
+
+# file too big, I comment to reduce size
+
+fig = go.Figure(go.Choroplethmapbox(geojson=countries,
+                                    locations=st_tp_df.Area,
+                                    z=st_tp_df.Value,
+                                    featureidkey="properties.ADMIN",
+                                    colorscale=[[0, 'rgb(255,255,255)'], [0.5, 'rgb(255,136,0)'], [1, 'rgb(255,0,0)']],
+                                    zmax = st_tp_df['Value'].max(),
+                                    text= st_tp_df.Area,
+                                    hovertemplate="Country: %{text}<br> %{z}"'<extra></extra>',
+                                    #labels={m_std_df.Value: 'Standard deviation<br> Temperature change'},
+                                    marker_opacity=0.7,
+                                    marker_line_width=0))
+
+fig.update_layout(mapbox_style="carto-positron",
+                  mapbox_zoom=1)
+fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+fig.show()
+
