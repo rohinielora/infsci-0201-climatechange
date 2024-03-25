@@ -3,16 +3,36 @@ import pandas as pd
 class Model:
     def __init__(self, data_access):
         self.data_access = data_access
-        self.countries_geojson = self.load_countries_geojson()
-        self.temperature_df = self.load_and_process_temperature_data()
-        self.std_df = self.load_and_process_std_data()
+        self._countries_geojson = self.load_countries_geojson()
+        self._temperature_df = None  # Initialize with None
+        self._std_df = None  # Initialize with None
+        self.load_and_process_temperature_data()
+        self.load_and_process_std_data()
 
-    def load_countries_geojson(self):
-        return self.data_access.load_geojson_data("../data/countries.geojson")
+    @property
+    def temperature_df(self):
+        return self._temperature_df
 
-    def align_country_names(self, df, countries_dict):
-        df['Area'] = df['Area'].replace(countries_dict)
-        return df
+    @temperature_df.setter
+    def temperature_df(self, df):
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("Temperature data must be a pandas DataFrame.")
+        if df.empty:
+            raise ValueError("Temperature DataFrame cannot be empty.")
+        self._temperature_df = df
+
+    # Similarly for std_df
+    @property
+    def std_df(self):
+        return self._std_df
+
+    @std_df.setter
+    def std_df(self, df):
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("Standard deviation data must be a pandas DataFrame.")
+        if df.empty:
+            raise ValueError("Standard deviation DataFrame cannot be empty.")
+        self._std_df = df
 
     def load_and_process_temperature_data(self):
         df = self.data_access.load_csv_data("../data/FAOSTAT_temperature.csv")
